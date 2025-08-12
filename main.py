@@ -12,7 +12,7 @@ SECRET_KEY = "secret123"
 ALGORITHM = "HS256"
 EXPIRE_MINUTES = 30
 
-application = FastAPI()
+app = FastAPI()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -46,7 +46,7 @@ class Theme(BaseModel):
     content:str
     tags:str
 
-@application.middleware("http")
+@app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     # Faqat POST, PUT, DELETE uchun JWT tekshiriladi
     if request.method in ("POST", "PUT", "DELETE"):
@@ -65,7 +65,7 @@ async def auth_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
-application.add_middleware(
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173","https://edora.netlify.app/","https://edora-ashy.vercel.app/"],  
     allow_credentials=True,
@@ -73,13 +73,13 @@ application.add_middleware(
     allow_headers=["*"],
 )
 
-@application.get("/")
+@app.get("/")
 def greeting():
     cursor = conn.cursor()
     res = cursor.execute("PRAGMA user_version").fetchone()
     return {"user_version": res[0]}
 
-@application.post("/login", response_model=Token)
+@app.post("/login", response_model=Token)
 def login(form_data:OAuth2PasswordRequestForm = Depends()):
     login = "admin"
     password = get_hashed_password("1234")
@@ -91,14 +91,14 @@ def login(form_data:OAuth2PasswordRequestForm = Depends()):
     finally:
         pass
 
-@application.get("/subjects")
+@app.get("/subjects")
 def get_subjects():
     cursor = conn.cursor()
     result = cursor.execute("SELECT * FROM subject").fetchall()
     cursor.close()
     return {"data": result}
 
-@application.post("/subject")
+@app.post("/subject")
 def add_subject(data:Subject):
     cursor = conn.cursor()
     try:
@@ -111,7 +111,7 @@ def add_subject(data:Subject):
         conn.commit()
         cursor.close()
 
-@application.put("/subject/{id}")
+@app.put("/subject/{id}")
 def update_subject(data:Subject, id:int):
     cursor = conn.cursor()
     try:
@@ -127,7 +127,7 @@ def update_subject(data:Subject, id:int):
         conn.commit()
         cursor.close()
 
-@application.delete("/subject/{id}")
+@app.delete("/subject/{id}")
 def delete_subject(id:int):
     cursor = conn.cursor()
     try:
@@ -143,14 +143,14 @@ def delete_subject(id:int):
         conn.commit()
         cursor.close()
 
-@application.get("/themes")
+@app.get("/themes")
 def get_themes():
     cursor = conn.cursor()
     result = cursor.execute("SELECT * FROM theme").fetchall()
     cursor.close()
     return {"data": result}
 
-@application.post("/theme")
+@app.post("/theme")
 def add_theme(data: Theme):
     cursor = conn.cursor()
     try:
@@ -169,7 +169,7 @@ def add_theme(data: Theme):
         conn.commit()
         cursor.close()
 
-@application.put("/theme/{id}")
+@app.put("/theme/{id}")
 def update_theme(id: int, data: Theme):
     cursor = conn.cursor()
     try:
@@ -191,7 +191,7 @@ def update_theme(id: int, data: Theme):
         conn.commit()
         cursor.close()
 
-@application.delete("/theme/{id}")
+@app.delete("/theme/{id}")
 def delete_theme(id: int):
     cursor = conn.cursor()
     try:

@@ -46,7 +46,7 @@ class Theme(BaseModel):
     content:str
     tags:str
 
-@app.middleware("http")
+@app.middleware("https")
 async def auth_middleware(request: Request, call_next):
     # Faqat POST, PUT, DELETE uchun JWT tekshiriladi
     if request.method in ("POST", "PUT", "DELETE"):

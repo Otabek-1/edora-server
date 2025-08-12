@@ -67,7 +67,7 @@ async def auth_middleware(request: Request, call_next):
 
 application.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://edora.netlify.app/"],  
+    allow_origins=["http://localhost:5173","https://edora.netlify.app/","https://edora-ashy.vercel.app/"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

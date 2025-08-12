@@ -75,6 +75,7 @@ app.add_middleware(
 
 @app.get("/")
 def greeting():
+    cursor = conn.cursor()
     res = cursor.execute("PRAGMA user_version").fetchone()
     return {"user_version": res[0]}
 

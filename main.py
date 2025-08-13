@@ -9,7 +9,16 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import os
 
-SECRET_KEY = os.getenv("SECRET_KEY", "secret123")
+# ---- PostgreSQL sozlamalari (to‘g‘ridan-to‘g‘ri kod ichida) ----
+PGUSER = "edora_admin"
+PGPASSWORD = "9vWKLNem05mUnSW6mHP1ngKyKTtKk1sN"
+PGHOST = "dpg-d2e5h76r433s73d2nde0-a"
+PGPORT = 5432
+PGDATABASE = "edora"
+
+DATABASE_URL = f"postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
+
+SECRET_KEY = "secret123"
 ALGORITHM = "HS256"
 EXPIRE_MINUTES = 30
 
@@ -19,9 +28,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 db_pool: asyncpg.Pool = None  # global pool
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 async def get_db():
-    async with db_pool.acquire() as conn:
-        yield conn
+    pool = await asyncpg.create_pool(dsn=DATABASE_URL)
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            yield conn
 
 def get_hashed_password(password: str):
     return pwd_context.hash(password)

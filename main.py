@@ -1,23 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
+import ssl
 import asyncpg
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-import os
-import ssl
-
-# ---- PostgreSQL sozlamalari (to‘g‘ridan-to‘g‘ri kod ichida) ----
-PGUSER = "edora_admin"
-PGPASSWORD = "9vWKLNem05mUnSW6mHP1ngKyKTtKk1sN"
-PGHOST = "dpg-d2e5h76r433s73d2nde0-a"
-PGPORT = 5432
-PGDATABASE = "edora"
-
-DATABASE_URL = f"postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 SECRET_KEY = "secret123"
 ALGORITHM = "HS256"
@@ -37,11 +26,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# === Supabase ma'lumotlari ===
+SUPABASE_HOST = "aws-0-eu-north-1.pooler.supabase.com"
+SUPABASE_DB = "postgres"
+SUPABASE_USER = "postgres.ybzmdlwxczqzvvtamjga"
+SUPABASE_PASSWORD = "Ibr0him$!"
+SUPABASE_PORT = 5432
+
 async def get_db():
-    pool = await asyncpg.create_pool(dsn=DATABASE_URL)
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            yield conn
+    async with db_pool.acquire() as conn:
+        yield conn
 
 def get_hashed_password(password: str):
     return pwd_context.hash(password)
@@ -69,24 +63,12 @@ class Theme(BaseModel):
     content: str
     tags: str
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.on_event("startup")
 async def startup():
     global db_pool
-    dsn = os.getenv("DATABASE_URL")
-    if not dsn:
-        dsn = (
-            f"postgresql://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}"
-            f"@{os.getenv('PGHOST')}:{os.getenv('PGPORT', 5432)}/{os.getenv('PGDATABASE')}"
-        )
-    db_pool = await asyncpg.create_pool(dsn=dsn)
+    ssl_context = ssl.create_default_context()
+    dsn = f"postgresql://{SUPABASE_USER}:{SUPABASE_PASSWORD}@{SUPABASE_HOST}:{SUPABASE_PORT}/{SUPABASE_DB}"
+    db_pool = await asyncpg.create_pool(dsn=dsn, ssl=ssl_context)
 
     async with db_pool.acquire() as conn:
         await conn.execute("""
@@ -131,11 +113,8 @@ async def get_subjects(db: asyncpg.Connection = Depends(get_db)):
 
 @app.post("/subject")
 async def add_subject(data: Subject, db: asyncpg.Connection = Depends(get_db)):
-    try:
-        await db.execute("INSERT INTO subject(name, tags) VALUES ($1, $2)", data.name, data.tags)
-        return {"message": "Muvaffaqiyatli qo'shildi!"}
-    except asyncpg.UniqueViolationError:
-        raise HTTPException(status_code=400, detail={"message": "Bunday subject mavjud"})
+    await db.execute("INSERT INTO subject(name, tags) VALUES ($1, $2)", data.name, data.tags)
+    return {"message": "Muvaffaqiyatli qo'shildi!"}
 
 @app.put("/subject/{id}")
 async def update_subject(id: int, data: Subject, db: asyncpg.Connection = Depends(get_db)):

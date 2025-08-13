@@ -74,13 +74,13 @@ class Theme(BaseModel):
 #     response = await call_next(request)
 #     return response
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:5173", "https://edora.netlify.app", "https://edora-ashy.vercel.app"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def greeting(db: asyncpg.Connection = Depends(get_db)):

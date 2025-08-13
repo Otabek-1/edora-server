@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import os
+import ssl
 
 # ---- PostgreSQL sozlamalari (to‘g‘ridan-to‘g‘ri kod ichida) ----
 PGUSER = "edora_admin"

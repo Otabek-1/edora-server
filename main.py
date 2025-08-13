@@ -59,7 +59,7 @@ class Theme(BaseModel):
 @app.middleware("https")
 async def auth_middleware(request: Request, call_next):
     if request.method in ("POST", "PUT", "DELETE"):
-        public_paths = ["/login"]
+        public_paths = ["/login","/"]
         if request.url.path not in public_paths:
             token = request.headers.get("Authorization")
             if not token:
@@ -74,13 +74,13 @@ async def auth_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://edora.netlify.app", "https://edora-ashy.vercel.app"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:5173", "https://edora.netlify.app", "https://edora-ashy.vercel.app"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 @app.get("/")
 async def greeting(db: asyncpg.Connection = Depends(get_db)):

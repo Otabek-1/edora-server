@@ -56,23 +56,23 @@ class Theme(BaseModel):
     content: str
     tags: str
 
-@app.middleware("https")
-async def auth_middleware(request: Request, call_next):
-    if request.method in ("POST", "PUT", "DELETE"):
-        public_paths = ["/login","/"]
-        if request.url.path not in public_paths:
-            token = request.headers.get("Authorization")
-            if not token:
-                return JSONResponse(status_code=401, content={"detail": "Token kerak"})
-            try:
-                scheme, _, token_value = token.partition(" ")
-                if scheme.lower() != "bearer":
-                    raise JWTError("Bearer bo'lishi kerak")
-                jwt.decode(token_value, SECRET_KEY, algorithms=[ALGORITHM])
-            except JWTError:
-                return JSONResponse(status_code=401, content={"detail": "Yaroqsiz token"})
-    response = await call_next(request)
-    return response
+# @app.middleware("https")
+# async def auth_middleware(request: Request, call_next):
+#     if request.method in ("POST", "PUT", "DELETE"):
+#         public_paths = ["/login","/"]
+#         if request.url.path not in public_paths:
+#             token = request.headers.get("Authorization")
+#             if not token:
+#                 return JSONResponse(status_code=401, content={"detail": "Token kerak"})
+#             try:
+#                 scheme, _, token_value = token.partition(" ")
+#                 if scheme.lower() != "bearer":
+#                     raise JWTError("Bearer bo'lishi kerak")
+#                 jwt.decode(token_value, SECRET_KEY, algorithms=[ALGORITHM])
+#             except JWTError:
+#                 return JSONResponse(status_code=401, content={"detail": "Yaroqsiz token"})
+#     response = await call_next(request)
+#     return response
 
 # app.add_middleware(
 #     CORSMiddleware,

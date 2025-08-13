@@ -8,7 +8,6 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from contextlib import asynccontextmanager
 
 SECRET_KEY = os.getenv("SECRET_KEY", "secret123")
 ALGORITHM = "HS256"
@@ -19,17 +18,19 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # PostgreSQL connection pool
-@asynccontextmanager
 async def get_db():
     dsn = os.getenv("DATABASE_URL")
     if not dsn:
-        dsn = f"postgresql://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}@{os.getenv('PGHOST')}:{os.getenv('PGPORT', 5432)}/{os.getenv('PGDATABASE')}"
+        dsn = (
+            f"postgresql://{os.getenv('PGUSER')}:{os.getenv('PGPASSWORD')}"
+            f"@{os.getenv('PGHOST')}:{os.getenv('PGPORT', 5432)}/{os.getenv('PGDATABASE')}"
+        )
     pool = await asyncpg.create_pool(dsn=dsn)
-    try:
-        async with pool.acquire() as conn:
-            yield conn
-    finally:
-        await pool.close()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            yield conn     
+        
+        
 def get_hashed_password(password: str):
     return pwd_context.hash(password)
 

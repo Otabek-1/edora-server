@@ -67,6 +67,8 @@ class Theme(BaseModel):
 async def startup():
     global db_pool
     ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE  # sertifikatni tekshirmaydi
     dsn = f"postgresql://{SUPABASE_USER}:{SUPABASE_PASSWORD}@{SUPABASE_HOST}:{SUPABASE_PORT}/{SUPABASE_DB}"
     db_pool = await asyncpg.create_pool(dsn=dsn, ssl=ssl_context)
 

@@ -171,3 +171,12 @@ async def delete_theme(id: int, db: asyncpg.Connection = Depends(get_db)):
         raise HTTPException(status_code=404, detail={"message": "Theme mavjud emas."})
     await db.execute("DELETE FROM theme WHERE id = $1", id)
     return {"message": "Theme muvaffaqiyatli o'chirildi!"}
+
+@app.post("/views/{themeId}")
+async def updateViews(themeId:int, db: asyncpg.Connection = Depends(get_db)):
+    theme = await db.fetchrow("SELECT * FROM theme WHERE id = $1", themeId)
+    if not theme:
+        raise HTTPException(status_code=404, detail="Theme not found")
+    views = theme.views
+    views+=1
+    await db.execute("UPDATE theme SET views = $1 WHERE id = $2", views, themeId)
